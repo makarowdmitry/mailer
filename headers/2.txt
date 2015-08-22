@@ -1,0 +1,8 @@
+Date: [%%HRandRFCDateTime%%]
+From: [%%HFromEmail%%]
+X-Priority: [%%HPriorityNumber%%] ([%%HPriorityString%%])
+Message-ID: <[%%ORandStr,7-10,1-9,U%%].[%%HCurrentYear%%][%%HCurrentMonth%%][%%HCurrentDay%%][%%HCurrentHour%%][%%HCurrentMin%%][%%HCurrentSec%%]@[%%HFromEmailDomain%%]>
+To: [%%FEmail%%]
+Subject: [%%HSubject%%]
+MIME-Version: 1.0
+Content-Type: [%%HMsgContentType%%]

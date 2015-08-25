@@ -4,6 +4,14 @@ import random
 import re
 import os
 import datetime
+import sys
+import smtplib
+import socks
+import socket
+import quopri
+import email.message
+from email.parser import Parser
+import math
 
 
 class Tag():
@@ -692,6 +700,217 @@ class Tag():
 		
 		return header
 
+
+
+
+class Letter():
+	"""Letter generate for sent"""		
+
+	def html(self):
+		tag = Tag()
+
+		# How sent letter
+		count = 1
+
+		counter_file = open('counter.txt','r')
+		counter = int(counter_file.read().strip())
+		counter_file.close()
+
+		counttext = int(math.ceil(counter/count))
+
+		new_counter = open('counter.txt','w')
+		new_counter.write(str(1+counter))
+		new_counter.close()
+
+		files_html = os.listdir('body')
+		filename = random.choice(files_html)
+		letter = tag.body(filename=filename,counttext=counttext)
+
+		return letter
+
+	def text(self):
+		tag = Tag()
+
+		# How sent letter
+		count = 1
+
+		counter_file = open('counter.txt','r')
+		counter = int(counter_file.read().strip())
+		counter_file.close()
+
+		counttext = int(math.ceil(counter/count))
+
+		new_counter = open('counter.txt','w')
+		new_counter.write(str(1+counter))
+		new_counter.close()
+
+		text = tag.text(counttext=counttext)
+
+		return text
+
+
+
+	def proc(self):
+		tag = Tag()
+		new_html_list = os.listdir('body_raw')
+		for html in new_html_list:
+			html_this = open('body_raw/'+html,'r').read()
+
+			# Замена всех дата тегов
+			data_tag = re.compile(r'(data[-\w*\d*]+=".+?")')
+			html_this = data_tag.sub(tag.replace_datatag_raw_body,html_this)
+
+			# Замена всех классов
+			class_attr = re.compile(r'(class="\w*\d*")')
+			html_this = class_attr.sub(tag.replace_class_raw_body,html_this)
+
+			# Замена шрифтов на _FONT_FAMILY_
+			font_family = re.compile(r'(font-family:.+?;)')
+			html_this = font_family.sub(tag.replace_fontf_raw_body,html_this)		
+
+			# Замена ссылок на _LINK1_ или _LINK2_
+			href_attr = re.compile(r'(a\s*href=".+?")')
+			html_this = href_attr.sub(tag.replace_href_raw_body,html_this)
+
+			# Замена картинки на _IMG_
+			src_attr = re.compile(r'(img\s*src="http.+?")')
+			html_this = src_attr.sub(tag.replace_src_raw_body,html_this)
+
+			# Замена всех не нулевых числовых значений на _DIGIT_100_0_1. Если 0 не заменяем. Если от 10 до 90 - делаем вилку +-3. Если Больше 100 вилку +-13
+			# pdb.set_trace()
+			digit_html = re.compile(r'(?P<sym1>[\(|"|,|\s*]+)\s*(?P<digit>[0-9]+)\s*(?P<sym>[\)|px|%|;|"|,|px;|]+)')
+			html_this = digit_html.sub(tag.replace_digit_raw_body,html_this)
+
+			# Подстановка нескольких _TAB_ между тегами
+			tad_temp = re.compile(r'(?P<tab></.+?>|<.+?>)')
+			html_this = tad_temp.sub(tag.replace_tabs_raw_body,html_this)
+
+			html_this = '_HEADERS_ _USER_HEADERS_'+html_this+'_USER_FOOTERS_'
+
+			# # Замена всех пробелов на _SPACES_
+			# spaces_temp = re.compile(r'(\s+)')
+			# html_this = spaces_temp.sub(tag.replace_spaces_raw_body,html_this)
+
+			# # Замена кавычек на _QOUTE_
+			# qoutes_temp = re.compile(r'(["]+)')
+			# html_this = qoutes_temp.sub(tag.replace_qoutes_raw_body,html_this)
+
+			html_name = datetime.datetime.now().strftime("%d-%m-%Y_%H-%M-%S_")+str(random.randint(17,28908))+'.html'
+			record_html = open('body/'+html_name,'w')
+			record_html.write(html_this)
+			record_html.close()
+
+		return True
+
+
+
+
+class MailerBears():
+	"""docstring for MailerBears"""
+	def __init__(self):
+		self.tag = Tag()
+
+	def socks_activate(self,socks_a):
+		socks_raw = socks_a.strip().split(',')
+		socks_active = {'ip':socks_raw[0],'port':int(socks_raw[1]),'hostname':socket.gethostbyaddr(socks_raw[0]),'username':socks_raw[2],'password':socks_raw[3]}
+		socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, addr=socks_active['ip'], port=socks_active['port'],username=socks_active['username'],password=socks_active['password'])
+		socks.wrapmodule(smtplib)
+		return socks_active['hostname'][0]
+
+	def get_fromaddr(self,count,filename='data/domain_all.txt',type='random'):
+		# fromaddres = []
+		# while (range(count)):
+		# 	rand_all_domain = ''.join(random.choice(open(filename,'r').readlines())).strip()
+		# 	fromaddr = self.tag.word_gen(1,'eng')+'@'+rand_all_domain
+		# 	fromaddres.append(fromaddr)
+
+		# return fromaddres
+		fromaddres = [self.tag.word_gen(1,'eng')+'@'+''.join(random.choice(open(filename,'r').readlines())).strip() for i in range(count)]			
+		return fromaddres
+
+	def get_letter(self,count,hostname,form_addr,toaddr):		
+
+		headers_letters = map(self.tag.headers_generate,form_addr,toaddr,form_addr)
+		msgs = map(self.tag.word_gen,[random.randint(10,1567) for i in range(count)],'ru')
+		msgs_raw = zip(headers_letters,msgs)
+
+		letters = [Parser().parsestr(l[0]+l[1]).as_string() for l in msgs_raw]
+
+
+		
+
+		
+		# while (range(count)):
+		# 	#Generate body letter
+		# 	# letter = Letter()
+		# 	# body_letter = letter.html()
+		# 	headers_letter = self.tag.headers_generate(fromaddr=form_addr,toaddr=toaddr,domain=form_addr.split('@')[1])
+		# 	letter1 = self.tag.word_gen(random.randint(10,1567),'ru')
+		# 	msg = 
+		# 	letters.append(msg)
+			#Generate header letter
+			# Return dict {'Subject':subject,'Date':date_letter,'X-Priority':priority_x,'Message-ID':message_id,'MIME-Version':mime,'Content-Type':content_type,'Content-Transfer-Encoding':content_transfer}
+
+		# print msg
+		return ' '.join(letters)
+
+		
+
+
+	def sent_emails(self,count,ehlo,letter,fromaddr,toaddr):
+		server_mail = 'mxs.mail.ru'
+		server = smtplib.SMTP(server_mail)
+		server.set_debuglevel(1)
+		server.ehlo(ehlo)
+
+		from multiprocessing import Pool
+
+		
+		pool = Pool(processes=count)
+		pool.map(server.sendmail, fromaddr, toaddr, letter)
+		# return ' '.join(lst)
+		return True
+		          #
+		
+		# server.quit()
+
+
+
+
+# from concurrent.futures import ThreadPoolExecutor
+
+# with ThreadPoolExecutor(concurrency) as executor:
+# 	for _ in executor.map(create_droplet, random.sample(list_region,concurrency)):
+# i = 0
+# while i<100:
+# 	server.sendmail(fromaddr, toaddr, msg)
+# 	i+=1
+
+
+# msg = email.message.Message.(headers_letter+tag.word_gen(random.randint(17,167),'eng'))
+# msg = MIMEText(tag.word_gen(random.randint(6,21),'eng').encode('cp1251'))
+# msg = MIMEText('hi')
+
+# del msg['Content-Type']
+# del msg['MIME-Version']
+# del msg['Content-Transfer-Encoding']
+# msg['Date'] = headers_letter['Date']
+# msg['From'] = fromaddr
+# msg['X-Priority'] = headers_letter['X-Priority']
+# # msg['X-MAX'] = 'gwegwegweg'
+# msg['Message-ID'] = headers_letter['Message-ID']
+# msg['To'] = toaddr
+# msg['Subject'] = tag.word_gen(random.randint(4,6),'eng')
+# # msg['CC'] = toaddrbcc
+# msg['MIME-Version'] = headers_letter['MIME-Version']
+# msg['Content-Type'] = headers_letter['Content-Type']
+# msg['Content-Transfer-Encoding'] = headers_letter['Content-Transfer-Encoding']
+
+
+
+
+# msg = headers_letter+'\r\n\r\n'+quopri.decodestring(tag.word_gen(random.randint(6,21),'eng'))
+# msg = 'From: {0}\r\n To: {1}\r\n\n {2}'.format(fromaddr,toaddr,'Hello my friends')
 
 # date_letter = now_time.strftime('%a, %d %b %Y %H:%M:%S ')+random.choice(['-','+'])+random.choice(self.timezones)+'00'#Date: Sat, 22 Aug 2015 07:30:38 +0400
 # from_letter = fromaddr

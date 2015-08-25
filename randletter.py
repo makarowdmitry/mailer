@@ -13,7 +13,7 @@ class Tag():
 	punctuation = [',','!','?','.','.','.',',','','','-',';',':']
 	br_tag=['<br >','<br/>','<br>','','']
 	font_family = ["'Courier New', Courier, monospace","Arial, Helvetica, sans-serif",'Verdana','Tahoma']
-	timezones = ['12','11','10','09','08','07','06','05','04','03','02','01']
+	timezones = ['03','02','01']
 	
 
 	tag = {
@@ -676,29 +676,34 @@ class Tag():
 	def headers_generate(self,fromaddr,toaddr,domain):
 		template_headers = random.choice(['thebat4.2.23'])
 		now_time = datetime.datetime.now()-datetime.timedelta(minutes=random.randint(23,176))
-		# date_letter = 'Date: '+now_time.strftime('%a, %d %b %Y %H:%M:%S ')+random.choice(['-','+'])+random.choice(self.timezones)+'00\r\n'#Date: Sat, 22 Aug 2015 07:30:38 +0400
-		# from_letter = fromaddr+'\r\n'
-		# priority_x = 'X-Priority: 3 (Normal)\r\n'
-		# to_letter = toaddr+'\r\n'
-		# message_id = 'Message-ID: <'+str(random.randint(382429100,1892311982))+'.'+now_time.strftime('%Y%m%d%H%M%S')+'@'+domain+'\r\n'
-		# subject = 'Subject: '+self.word_gen(random.randint(3,6),'eng')+'\r\n'
-		# mime = 'MIME-Version: 1.0\r\n'
-		# content_type = 'text/plain; charset=windows-1251\r\n'
-		# content_transfer = 'Content-Transfer-Encoding: quoted-printable'#quoted-printable 8bit
+		# Generate Headers
+		from_letter = 'From: '+fromaddr+'\n'
+		date_letter = 'Date: '+now_time.strftime('%a, %d %b %Y %H:%M:%S ')+random.choice(['+'])+random.choice(self.timezones)+'00\r\n'#Date: Sat, 22 Aug 2015 07:30:38 +0400		
+		priority_x = 'X-Priority: 3 (Normal)\n'
+		to_letter = 'To: '+toaddr+'\n'
+		message_id = 'Message-ID: <'+str(random.randint(382429100,1892311982))+'.'+now_time.strftime('%Y%m%d%H%M%S')+'@'+domain+'\r\n'
+		subject = 'Subject: '+self.word_gen(random.randint(3,6),'ru')+'\r\n'
+		mime = 'MIME-Version: 1.0\r\n'
+		content_type = 'Content-Type: text/plain; charset=windows-1251\r\n'
+		content_transfer = 'Content-Transfer-Encoding: quoted-printable\r\n'#quoted-printable 8bit
 
-		date_letter = now_time.strftime('%a, %d %b %Y %H:%M:%S ')+random.choice(['-','+'])+random.choice(self.timezones)+'00'#Date: Sat, 22 Aug 2015 07:30:38 +0400
-		from_letter = fromaddr
-		priority_x = '3 (Normal)'
-		to_letter = toaddr
-		message_id = '<'+str(random.randint(382429100,1892311982))+'.'+now_time.strftime('%Y%m%d%H%M%S')+'@'+domain
-		subject = self.word_gen(random.randint(3,6),'eng')
-		mime = '1.1'
-		content_type = 'text/plain; charset="us-ascii"'
-		content_transfer = '8bit'
+		header = date_letter+from_letter+priority_x+to_letter+message_id+subject+mime+content_type+content_transfer+'\r\n'
 
-		header = {'Subject':subject,'Date':date_letter,'X-Priority':priority_x,'Message-ID':message_id,'MIME-Version':mime,'Content-Type':content_type,'Content-Transfer-Encoding':content_transfer}
-
+		
 		return header
+
+
+# date_letter = now_time.strftime('%a, %d %b %Y %H:%M:%S ')+random.choice(['-','+'])+random.choice(self.timezones)+'00'#Date: Sat, 22 Aug 2015 07:30:38 +0400
+# from_letter = fromaddr
+# priority_x = '3 (Normal)'
+# to_letter = toaddr
+# message_id = '<'+str(random.randint(382429100,1892311982))+'.'+now_time.strftime('%Y%m%d%H%M%S')+'@'+domain
+# subject = self.word_gen(random.randint(3,6),'eng')
+# mime = '1.0'
+# content_type = 'text/plain; charset="windows-1251"'
+# content_transfer = '8bit'
+
+# header = {'Subject':subject,'Date':date_letter,'X-Priority':priority_x,'Message-ID':message_id,'MIME-Version':mime,'Content-Type':content_type,'Content-Transfer-Encoding':content_transfer}
 
 # headers_generate('fromaddr','toaddr','domain')
 # from randletter import *

@@ -28,8 +28,6 @@ class Letter():
 
 		files_html = os.listdir('body')
 		filename = random.choice(files_html)
-
-
 		letter = tag.body(filename=filename,counttext=counttext)
 
 		return letter

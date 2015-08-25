@@ -12,6 +12,7 @@ import quopri
 import email.message
 from email.parser import Parser
 import math
+from multiprocessing import Pool
 
 
 class Tag():
@@ -828,12 +829,10 @@ class MailerBears():
 		fromaddres = [self.tag.word_gen(1,'eng')+'@'+''.join(random.choice(open(filename,'r').readlines())).strip() for i in range(count)]			
 		return fromaddres
 
-	def get_letter(self,count,hostname,form_addr,toaddr):		
-
+	def get_letter(self,count,hostname,form_addr,toaddr):
 		headers_letters = map(self.tag.headers_generate,form_addr,toaddr,form_addr)
 		msgs = map(self.tag.word_gen,[random.randint(10,1567) for i in range(count)],'ru')
 		msgs_raw = zip(headers_letters,msgs)
-
 		letters = [Parser().parsestr(l[0]+l[1]).as_string() for l in msgs_raw]
 
 
@@ -852,27 +851,36 @@ class MailerBears():
 			# Return dict {'Subject':subject,'Date':date_letter,'X-Priority':priority_x,'Message-ID':message_id,'MIME-Version':mime,'Content-Type':content_type,'Content-Transfer-Encoding':content_transfer}
 
 		# print msg
-		return ' '.join(letters)
+		return letters
+
+
+	# def sent_mail_one(self,data_for_sent):
+	# 	pass
 
 		
 
 
-	def sent_emails(self,count,ehlo,letter,fromaddr,toaddr):
-		server_mail = 'mxs.mail.ru'
-		server = smtplib.SMTP(server_mail)
-		server.set_debuglevel(1)
-		server.ehlo(ehlo)
+	# def sent_emails(self,count,ehlo,letter,fromaddr,toaddr):
+	# 	server_mail = 'mxs.mail.ru'
+	# 	server = smtplib.SMTP(server_mail)
+	# 	server.set_debuglevel(1)
+	# 	server.ehlo(ehlo)
+	# 	# generate list for dict
+	# 	lst_data = [{'from':i[0],'to':i[1],'letter':i[2]} for i in zip(fromaddr, toaddr, letter)]
 
-		from multiprocessing import Pool
+	# 	def thread_sent(lst_data):
+	# 		server.sendmail(lst_data['from'], lst_data['to'], lst_data['letter'])
+	# 		return 'ok'
+		
+	# 	if __name__ == "__main__":	
+		
+	# 		pool = Pool(count)
+	# 		pool.map(thread_sent, lst_data)
+	# 		pool.close()
+	# 		pool.join()
 
 		
-		pool = Pool(processes=count)
-		pool.map(server.sendmail, fromaddr, toaddr, letter)
-		# return ' '.join(lst)
-		return True
-		          #
-		
-		# server.quit()
+	# 	server.quit()
 
 
 

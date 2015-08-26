@@ -5,14 +5,40 @@
 # 2. Писать логи рассылки в sqlite 
 # 3. Сделать многопоточную отправку писем с 9 соксов
 
+Каждый процесс
+Перед каждым процессом
 
- 
+Параметры
+_RECIPIENT_BASE_1_1800000_TO_1_100_BCC_1_100_CC_1_100_,_THREADING_20_,_FROM_(RANDSTR/USER_URL)_USER_LIST_
+
+_THREADING_20_
+_FROM_(RANDSTR/USER_LIST)_USER_LIST_
+_DOMAINS_(NEXT/RAND)_1_USER_LIST_
+
+
+Обновить
+_RECIPIENT_BASE_1_1800000_TO_1_100_BCC_1_100_CC_1_100_
+На каждый раунд
+
+
+
+Подготовка
+1.Берем получателей из файла - записываем их в список
+2.Берем соксы из файла - записываем их в список
+3.Выделяем нужно количество процессов (Сколько соксов столько и процессов)
+4.Передаем каждому процессу функцию рассылки и аргументы(сокс)
+
+Функция рассылки
+1. 
 
 from mailerbears import *
 from functools import partial
+import time
+
+start_time = time.time()
 
 m = MailerBears()
-ehlo = m.socks_activate("128.199.243.171,3128,goemailgo,q8uir")
+ehlo = m.socks_activate("162.243.207.126,3128,goemailgo,q8uir")
 
 server_mail = 'mxs.mail.ru'
 server = smtplib.SMTP(server_mail)
@@ -30,9 +56,9 @@ def printing(lim):
 if __name__ == '__main__':
 
 	
-	toaddr=['nikolaiofwt001mum@mail.ru' for x in range(1,500)]
+	toaddr=['nikolaiofwt001mum@mail.ru' for x in range(1,100)]
 
-	countprocess=10
+	countprocess=20
 	count = len(toaddr)
 	# print count
 	
@@ -48,7 +74,7 @@ if __name__ == '__main__':
 	# server.set_debuglevel(1)
 	server.ehlo(ehlo)
 	# generate list for dict
-
+	print time.time()-start_time
 	
 
 	pool = Pool(count)
@@ -58,6 +84,8 @@ if __name__ == '__main__':
 
 
 	server.quit()
+
+	print time.time()-start_time
 
 	# m.sent_emails(countprocess,hostname,letter,fromaddr,toaddr)
 	

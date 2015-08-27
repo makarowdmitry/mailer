@@ -13,6 +13,7 @@ import email.message
 from email.parser import Parser
 import math
 from multiprocessing import Pool
+import urllib
 
 
 class Tag():
@@ -682,14 +683,14 @@ class Tag():
 		###STYLE GENERATE END
 		return body
 
-	def headers_generate(self,fromaddr,toaddr,domain):
+	def headers_generate(self,fromaddr,toaddr,domain,bcc='no'):
 		template_headers = random.choice(['thebat4.2.23'])
 		now_time = datetime.datetime.now()-datetime.timedelta(minutes=random.randint(23,176))
 		# Generate Headers
 		from_letter = 'From: '+fromaddr+'\n'
 		date_letter = 'Date: '+now_time.strftime('%a, %d %b %Y %H:%M:%S ')+random.choice(['+'])+random.choice(self.timezones)+'00\r\n'#Date: Sat, 22 Aug 2015 07:30:38 +0400		
 		priority_x = 'X-Priority: 3 (Normal)\n'
-		to_letter = 'To: '+toaddr+'\n'
+		to_letter = 'To: '+str(toaddr)+'\n'
 		message_id = 'Message-ID: <'+str(random.randint(382429100,1892311982))+'.'+now_time.strftime('%Y%m%d%H%M%S')+'@'+domain+'\r\n'
 		subject = 'Subject: '+self.word_gen(random.randint(3,6),'ru')+'\r\n'
 		mime = 'MIME-Version: 1.0\r\n'
@@ -697,8 +698,11 @@ class Tag():
 		content_transfer = 'Content-Transfer-Encoding: quoted-printable\r\n'#quoted-printable 8bit
 
 		header = date_letter+from_letter+priority_x+to_letter+message_id+subject+mime+content_type+content_transfer+'\r\n'
-
 		
+		if bcc != False:
+			bcc_letter = 'BCC: '+bcc+'\n'
+			header = date_letter+from_letter+priority_x+to_letter+bcc_letter+message_id+subject+mime+content_type+content_transfer+'\r\n'
+
 		return header
 
 
@@ -811,14 +815,26 @@ class MailerBears():
 	def __init__(self):
 		self.tag = Tag()
 
-	def socks_activate(self,socks_a):
-		socks_raw = socks_a.strip().split(',')
-		socks_active = {'ip':socks_raw[0],'port':int(socks_raw[1]),'hostname':socket.gethostbyaddr(socks_raw[0]),'username':socks_raw[2],'password':socks_raw[3]}
-		socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, addr=socks_active['ip'], port=socks_active['port'],username=socks_active['username'],password=socks_active['password'])
-		socks.wrapmodule(smtplib)
-		return socks_active['hostname'][0]
+	def get_socks(self,link_socks):
+		return map(lambda x:x.strip(),urllib.urlopen(link_socks).readlines())
 
-	def get_fromaddr(self,count,filename='data/domain_all.txt',type='random'):
+	def get_recipient(self,path_recipientfile):
+		recipient = map(lambda x:x.strip(),open(path_recipientfile,'r').readlines())
+		random.shuffle(recipient)
+		return recipient
+	
+
+	def socks_activate(self,socks_a):
+		try:
+			socks_raw = socks_a.strip().split(',')
+			socks_active = {'ip':socks_raw[0],'port':int(socks_raw[1]),'hostname':socket.gethostbyaddr(socks_raw[0]),'username':socks_raw[3],'password':socks_raw[4]}
+			socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, addr=socks_active['ip'], port=socks_active['port'],username=socks_active['username'],password=socks_active['password'])
+			socks.wrapmodule(smtplib)
+			return socks_active['hostname'][0]
+		except:
+			return False
+
+	def get_fromaddr(self):
 		# fromaddres = []
 		# while (range(count)):
 		# 	rand_all_domain = ''.join(random.choice(open(filename,'r').readlines())).strip()
@@ -826,14 +842,14 @@ class MailerBears():
 		# 	fromaddres.append(fromaddr)
 
 		# return fromaddres
-		fromaddres = [self.tag.word_gen(1,'eng')+'@'+''.join(random.choice(open(filename,'r').readlines())).strip() for i in range(count)]			
+		filename='data/domain_all.txt'
+		fromaddres = self.tag.word_gen(1,'eng')+'@'+''.join(random.choice(open(filename,'r').readlines())).strip()
 		return fromaddres
 
-	def get_letter(self,count,hostname,form_addr,toaddr):
-		headers_letters = map(self.tag.headers_generate,form_addr,toaddr,form_addr)
-		msgs = map(self.tag.word_gen,[random.randint(10,1567) for i in range(count)],'ru')
-		msgs_raw = zip(headers_letters,msgs)
-		letters = [Parser().parsestr(l[0]+l[1]).as_string() for l in msgs_raw]
+	def get_letter(self,count,hostname,form_addr,toaddr,bcc):
+		headers_letters = self.tag.headers_generate(form_addr,toaddr,''.join(form_addr.split('@')[1]),bcc)
+		msgs = self.tag.word_gen(random.randint(10,1567),'ru')
+		letters = Parser().parsestr(headers_letters+msgs).as_string()
 
 
 		

@@ -37,6 +37,7 @@ except smtplib.SMTPServerDisconnected as error:
 
 except smtplib.SMTPSenderRefused as error:
 	result = 'SenderRefused: '+str(error[0])+' '+error[1]
+	#(421, 'Command out of sequence; try again later', 'pruam@athoning.com')
 	print result
 
 except smtplib.SMTPRecipientsRefused as error:

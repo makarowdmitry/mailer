@@ -18,41 +18,38 @@ import logging
 # # Сообщение критическое
 # logging.critical( u'FATAL!!!' )
 
-def init_mailer():
-	# 	ФУНКЦИЯ ПРЕСТАРТ
-	# 	На входе получаем список настроек
-	# 	-Готовим список получателей
-	# 	-Проверка соксов
-	# 		Выкачиваем соксы. И сверяем их с предыдущими. Если одинаковые или равны 0.0.0.0 - проверяем ссылку до тех пор пока не будет истина каждую секунду.
-	# 		Дальше переписываем файл socks и создаем список.
+
+# 	ФУНКЦИЯ ПРЕСТАРТ
+# 	На входе получаем список настроек
+# 	-Готовим список получателей
+# 	-Проверка соксов
+# 		Выкачиваем соксы. И сверяем их с предыдущими. Если одинаковые или равны 0.0.0.0 - проверяем ссылку до тех пор пока не будет истина каждую секунду.
+# 		Дальше переписываем файл socks и создаем список.
+
+
+QUEUE = Queue() #Initial Queue	
+BEARS = MailerBears() #Initial class MailerBears()	
+LOCK = threading.RLock() #Initial Lock	
+RECIPIENT = BEARS.get_recipient('data/myemail4.txt') #List recipient	
+PATH_SOCKS = 'http://109.234.38.38/media/sss/o4.txt' #List Socks
+SOCKS = BEARS.get_socks(PATH_SOCKS)
+# SOCKS = ['46.101.224.82,3128,SOCKS5,goemailgo,q8uir']
+
+THREADS_COUNT_SOCKS = len(SOCKS) #Count Threads Socks	
+THREADS_COUNT= 10 #Count Threads on every socks
+THREADS_COUNT2= 50
+
+TO = 1
+BCC = 0 #random.randint(10,16)
+CC = 0
+
+LOGGING_FILE = 'data/mylog.log'
+logging.basicConfig(format = '%(levelname)-3s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = LOGGING_FILE)
 
 	
-	QUEUE = Queue() #Initial Queue	
-	BEARS = MailerBears() #Initial class MailerBears()	
-	LOCK = threading.RLock() #Initial Lock	
-	RECIPIENT = BEARS.get_recipient('data/myemail4.txt') #List recipient	
-	PATH_SOCKS = 'http://109.234.38.38/media/sss/o4.txt' #List Socks
-	SOCKS = BEARS.get_socks(PATH_SOCKS)
-	# SOCKS = ['46.101.224.82,3128,SOCKS5,goemailgo,q8uir']
-	
-	THREADS_COUNT_SOCKS = len(SOCKS) #Count Threads Socks	
-	THREADS_COUNT= 10 #Count Threads on every socks
-	THREADS_COUNT2= 50
-
-	TO = 1
-	BCC = 15 #random.randint(10,16)
-	CC = 0
-
-	LOGGING_FILE = 'data/mylog.log'
-	logging.basicConfig(format = '%(levelname)-3s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = LOGGING_FILE)
-
-	return True
   
 
 def sent_email(threads_count,sock):
-	global BEARS
-	global TO
-
 	ehlo = BEARS.socks_activate(sock)
 	server_mail = 'mxs.mail.ru'
 	server = smtplib.SMTP(server_mail)
@@ -60,48 +57,28 @@ def sent_email(threads_count,sock):
 
 	# Generate from and letter
 	for _ in xrange(threads_count):
-		try:
-			if BCC>0:
-				recipients = [QUEUE.get_nowait() for i in range(BCC)]
-				recipient = recipients[0]
-				bcc = ','.join(recipients)
+		
+		if BCC>0:
+			recipients = [QUEUE.get_nowait() for i in range(BCC)]
+			recipient = recipients[0]
+			bcc = ','.join(recipients)
 
-				if ehlo==False:
-					map(QUEUE.put,recipients)
-			else:
-				recipient =  QUEUE.get_nowait()
-				bcc = False
-				if ehlo==False:
-					QUEUE.put(recipient)
-			
-			fromaddr = BEARS.get_fromaddr()
-			letter = BEARS.get_letter(1,ehlo,fromaddr,recipient,bcc)
-			try:
-				thread_ = threading.Thread(target=server.sendmail,args=(fromaddr,recipients,letter))
-				thread_.start()
-				logging.info(QUEUE.get())
-			except smtplib.something.senderror, errormsg:
-				logging.error(errormsg)
-        		continue		
-
-		except Exception, error:
-			logging.error('error')
-			return
+			if ehlo==False:
+				map(QUEUE.put,recipients)
+		else:
+			recipient = QUEUE.get_nowait()
+			bcc = False
+			if ehlo==False:
+				QUEUE.put(recipient)
+		
+		fromaddr = BEARS.get_fromaddr()
+		letter = BEARS.get_letter(1,ehlo,fromaddr,recipient,bcc)			
+		thread_ = threading.Thread(target=server.sendmail,args=(fromaddr,recipient,letter))
+		thread_.start()
+		thread_.join()
 	
 	server.quit()
 
-
-def worker_connect(threads_count,sock):
-	global QUEUE
-	global LOCK    
-	answer_server = sent_email(threads_count,sock)
-
-
-def go_thread_socks():
-	for sock in SOCKS:
-		for _ in xrange(THREADS_COUNT):
-			thread_ = threading.Thread(target=worker_connect,args=(THREADS_COUNT2,sock))
-			thread_.start()
 
 def main():
 	start_time = time.time()
@@ -112,8 +89,9 @@ def main():
 
 	for sock in SOCKS:
 		for _ in xrange(THREADS_COUNT):
-			thread_ = threading.Thread(target=worker_connect,args=(THREADS_COUNT2,sock))
+			thread_ = threading.Thread(target=sent_email,args=(THREADS_COUNT,sock))
 			thread_.start()
+			thread_.join()
 
 	while threading.active_count()>1:
 		time.sleep(1)

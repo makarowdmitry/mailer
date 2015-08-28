@@ -18,36 +18,35 @@ import logging
 # # Сообщение критическое
 # logging.critical( u'FATAL!!!' )
 
-# Initial Queue
-QUEUE = Queue()
-#Initial class MailerBears()
-BEARS = MailerBears()
+def init_mailer():
+	# 	ФУНКЦИЯ ПРЕСТАРТ
+	# 	На входе получаем список настроек
+	# 	-Готовим список получателей
+	# 	-Проверка соксов
+	# 		Выкачиваем соксы. И сверяем их с предыдущими. Если одинаковые или равны 0.0.0.0 - проверяем ссылку до тех пор пока не будет истина каждую секунду.
+	# 		Дальше переписываем файл socks и создаем список.
 
-# Initial Lock
-LOCK = threading.RLock()
+	
+	QUEUE = Queue() #Initial Queue	
+	BEARS = MailerBears() #Initial class MailerBears()	
+	LOCK = threading.RLock() #Initial Lock	
+	RECIPIENT = BEARS.get_recipient('data/myemail4.txt') #List recipient	
+	PATH_SOCKS = 'http://109.234.38.38/media/sss/o4.txt' #List Socks
+	SOCKS = BEARS.get_socks(PATH_SOCKS)
+	# SOCKS = ['46.101.224.82,3128,SOCKS5,goemailgo,q8uir']
+	
+	THREADS_COUNT_SOCKS = len(SOCKS) #Count Threads Socks	
+	THREADS_COUNT= 10 #Count Threads on every socks
+	THREADS_COUNT2= 50
 
-# List recipient
-RECIPIENT = BEARS.get_recipient('data/myemail4.txt')
+	TO = 1
+	BCC = 15 #random.randint(10,16)
+	CC = 0
 
+	LOGGING_FILE = 'data/mylog.log'
+	logging.basicConfig(format = '%(levelname)-3s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = LOGGING_FILE)
 
-# List Socks
-PATH_SOCKS = 'http://109.234.38.38/media/sss/o4.txt'
-SOCKS = BEARS.get_socks(PATH_SOCKS)
-# SOCKS = ['46.101.224.82,3128,SOCKS5,goemailgo,q8uir']
-
-# Count Threads Socks
-THREADS_COUNT_SOCKS = len(SOCKS)
-
-# Count Threads on every socks
-THREADS_COUNT= 10
-THREADS_COUNT2= 50
-
-TO = 1
-BCC = 15 #random.randint(10,16)
-CC = 0
-
-LOGGING_FILE = 'data/mylog.log'
-logging.basicConfig(format = '%(levelname)-3s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = LOGGING_FILE)
+	return True
   
 
 def sent_email(threads_count,sock):
@@ -107,33 +106,22 @@ def go_thread_socks():
 def main():
 	start_time = time.time()
 	print "STARTED"
-	#Вывод в консоль о начале процесса
-	global QUEUE
-	global RECIPIENT
-	global LOCK
-	global SOCKS
 
 	for recipient in RECIPIENT:
 		QUEUE.put(recipient)
 
-	try:
-		go_thread_socks()	
-	except:
-		new_socks = BEARS.get_socks(PATH_SOCKS)
+	for sock in SOCKS:
+		for _ in xrange(THREADS_COUNT):
+			thread_ = threading.Thread(target=worker_connect,args=(THREADS_COUNT2,sock))
+			thread_.start()
 
-		while new_socks==SOCKS or new_socks[0]=='0.0.0.0':
-			new_socks = BEARS.get_socks(PATH_SOCKS)
-			time.sleep(3)
-
-		SOCKS = new_socks
-		go_thread_socks()
-
-
-	while threading.active_count() >1:
+	while threading.active_count()>1:
 		time.sleep(1)
 
 	print "FINISHED"
 	print time.time()-start_time
+
+
 
 
 if __name__ == '__main__':
@@ -142,10 +130,49 @@ if __name__ == '__main__':
 
 
 
+# Скрипт должен иметь следующие управление
+# 1. start - запускает рассылку. Рассылка заканчивается, когда все соксы выдали больше 1 раз ошибку 441 templory limit каждый или перестали работать
+
+# 	ФУНКЦИЯ ПРЕСТАРТ
+# 	На входе получаем список настроек
+# 	-Готовим список получателей
+# 	-Проверка соксов
+# 		Выкачиваем соксы. И сверяем их с предыдущими. Если одинаковые или равны 0.0.0.0 - проверяем ссылку до тех пор пока не будет истина каждую секунду.
+# 		Дальше переписываем файл socks и создаем список.
+
+
+# 	ФУНКЦИЯ РАССЫЛКИ 
+# 	Берем соксы из переменной - запускаем потоки.	
+# 	По каждой отправке пишем лог (с какого ip отправили, ответ сервера) и обновляем значение в словаре по кол. (сколько успешных, сколько spam, сколько ошибок fromadd, сколько темплори лимит)
+# 	Останавливаем когда соксы выдали больше 1 раз ошибку 441 templory limit каждый или перестали работать.
+# 	По окончанию:
+# 	-Пишем кол. ответов сервера из словаря (сколько успешных, сколько spam, сколько ошибок fromadd, сколько темплори лимит) в файл результаты.
+# 	-Пишем получателей (красных, зеленых в разные списки). Переписываем файл получателей
+	
+
+
+
+# 2. cycle - запускает рассылку по циклу. Рассылка заканчивается тогда, когда заканчивается база
+# 	Цикл
+# 	ФУНКЦИЯ ПРЕСТАРТ
+# 	ФУНКЦИЯ ПРОВЕРКИ КОЛ. В БАЗЕ (если меньше 0) - останавливается
+# 	ФУНКЦИЯ РАССЫЛКИ
 
 
 
 
+
+# try:
+# 		go_thread_socks()	
+# 	except:
+# 		new_socks = BEARS.get_socks(PATH_SOCKS)
+
+# 		while new_socks==SOCKS or new_socks[0]=='0.0.0.0':
+# 			new_socks = BEARS.get_socks(PATH_SOCKS)
+# 			time.sleep(3)
+
+# 		SOCKS = new_socks
+# 		go_thread_socks()
 
 # 1. Сделать тот в точь заголовки thebat
 # 2. Писать логи рассылки в sqlite 

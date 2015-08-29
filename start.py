@@ -46,8 +46,9 @@ CC = 0
 LOGGING_FILE = 'data/mylog.log'
 logging.basicConfig(format = '%(levelname)-3s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = LOGGING_FILE)
 
-	
-  
+
+
+
 
 def sent_email(threads_count,sock):
 	ehlo = BEARS.socks_activate(sock)

@@ -4,19 +4,29 @@
 
 #!/home/andrew/projects/py3k/python
 
+# 1.Решить с соксами. Должно параллельно слать со всех.
+# 2.Решить полностью с записью в логи.
+# 3.Решить запись статистики по раунду.
+# 4.Записывать успешно отправленные и боунсы.
+# 5.Решить остановку когда делать и сделать.
+# 6.Прикрепить отравку письма с шаблонами макса
+# 7. Сделать цикл отправки со сменой соксов.
+
 import threading
 from concurrent import futures
 from collections import defaultdict, namedtuple
 from mailerbears import *
 import time
 import logging
+from multiprocessing import Pool
+from multiprocessing import Process
 
 BEARS = MailerBears() #Initial class MailerBears()	
 RECIPIENT = BEARS.get_recipient('data/myemail4.txt') #List recipient	
 PATH_SOCKS = 'http://109.234.38.38/media/sss/o4.txt' #List Socks
 SOCKS = BEARS.get_socks(PATH_SOCKS)
 # SOCKS = ['46.101.224.82,3128,SOCKS5,goemailgo,q8uir']
-CONCURRENT = 30000
+CONCURRENT = 100
 TO = 1
 BCC = 15 #random.randint(10,16)
 CC = 0
@@ -51,7 +61,7 @@ class Mailerhi():
 					del RECIPIENT[0]
 					bcc = False
 
-				print len(RECIPIENT)
+				# print len(RECIPIENT)
 				return bcc,recipient
 		except:
 			return False
@@ -62,17 +72,20 @@ class Mailerhi():
 		logging.info(ip+' '+stat_sent)
 		return True
 
-	def sent_email(self,server,ehlo,recipient,bcc):
+	def sent_email(self,ehlo,recipient,bcc):
 		# Generate letter, generate fromaddress, activate_socks,отправка.
 		# Возврат результатов данной отправки
 		fromaddr = BEARS.get_fromaddr()
 		hostname = fromaddr.split('@')[1]
 		letter = BEARS.get_letter(1,hostname,fromaddr,recipient,bcc)
 		
-		try:	
-
+		try:
+			server_mail = 'mxs.mail.ru'
+			server = smtplib.SMTP(server_mail)
+			server.ehlo(ehlo)
 			server.sendmail(fromaddr,recipient,letter)
 			result = 'Success'
+			server.quit()
 
 		except socks.ProxyConnectionError as error:
 			result = 'ProxyConnectionError:'+str(error)
@@ -145,8 +158,6 @@ class Mailerhi():
 			result = error
 			print result
 
-
-
 		return result
 
 	# def record_recipient_ok_fail(self,fail_recipient,ok_recipient,bounce_recipient):
@@ -154,7 +165,7 @@ class Mailerhi():
 	# 	# Если ок не пустой - в список success_sent.txt. Если bounce не пустой - в список bounce.txt. Если fail не пустой - дописываем в список RECIPIENT
 	# 	pass
 
-	def start_sent(self,socks_active,count):
+	def start_sent(self,socks_active):
 		# Получаем получаетелей
 		# Отправляем письмо
 		# Записываем статистику
@@ -163,40 +174,52 @@ class Mailerhi():
 		# 	ehlo = BEARS.socks_activate(socks)
 		# with self._lock:
 			# print socks_active[0]
-		ehlo = socks_active['hostname'][0]
-		print ehlo
-		ip = socks_active['ip']
-		print ip
+		
+		ehlo = socks_active[0]
+		# print ehlo
+		ip = socks_active[1]
+		# print ip
+		
 		try:
-			server_mail = 'mxs.mail.ru'
-			server = smtplib.SMTP(server_mail)
-			server.ehlo(ehlo)
+			# server_mail = 'mxs.mail.ru'
+			# server = smtplib.SMTP(server_mail)
+			# server.ehlo(ehlo)
 			i=100
 			while i!=1:
 				with self._lock:
 					recipients = self.recipient_get()
 					i=len(RECIPIENT)
-				stat_sent = self.sent_email(server,ehlo,recipients[1],recipients[0])
+					print i
+				stat_sent = self.sent_email(ehlo,recipients[1],recipients[0])
+				print stat_sent
 				with self._lock:
 					self.record_log_and_counter(stat_sent,ip)
-			server.quit()
+			# server.quit()
+
+			print 'End start_sent'
 
 		except:
+			print 'Error start_sent'
 			return False
 		return True
 
-def threading_socks(socks,concurrent):
-	with futures.ThreadPoolExecutor(max_workers=concurrent) as pool:
-		mailer = Mailerhi(pool)
+def threading_socks(socks):
+	socks_active = BEARS.socks_activate(socks)
+	pool = ''
+	mailer = Mailerhi(pool)
 
-		LOCK.acquire()
-		socks_active = BEARS.socks_activate(socks)
-		
-		
-		for _ in pool.map(mailer.start_sent,BEARS.socks_activate(socks),range(concurrent)):
-			print socks_active
-			pass	
-		LOCK.release()	
+	for _ in range(100):
+		thread_ = threading.Thread(target=mailer.start_sent,args=(socks_active,))
+		thread_.start()
+
+
+
+	# with futures.ThreadPoolExecutor(max_workers=CONCURRENT) as pool:
+	# 	mailer = Mailerhi(pool)
+
+				
+	# 	for _ in pool.map(mailer.start_sent,socks_active,range(CONCURRENT)):
+	# 		pass	
 
 	return True
 
@@ -204,11 +227,18 @@ def threading_socks(socks,concurrent):
 if __name__ == '__main__':
 	# Проверяем по stat, когда останавливать рассылку
 	# for _ in range(3):
+	# pools = Pool(5)
+	# # for _ in range(5):
+	# pools.map(threading_socks, SOCKS)
+	for sock in SOCKS:	
+		p = Process(target=threading_socks, args=(sock,))
+		p.start()
+		
 
 
-	for socks in SOCKS:
-		thread_ = threading.Thread(target=threading_socks,args=(socks,CONCURRENT))
-		thread_.start()
+  	# for socks in SOCKS:
+	# 	thread_ = threading.Thread(target=threading_socks,args=(socks,CONCURRENT))
+	# 	thread_.start()
 
 	# m = Mailerhi()
 	# m.record_log_and_counter('wegweg')

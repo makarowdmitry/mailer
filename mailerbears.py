@@ -830,8 +830,10 @@ class MailerBears():
 			socks_active = {'ip':socks_raw[0],'port':int(socks_raw[1]),'hostname':socket.gethostbyaddr(socks_raw[0]),'username':socks_raw[3],'password':socks_raw[4]}
 			socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, addr=socks_active['ip'], port=socks_active['port'],username=socks_active['username'],password=socks_active['password'])
 			socks.wrapmodule(smtplib)
-			# print socks_active
-			return socks_active
+			
+			result = (socks_active['hostname'][0],socks_active['ip'])
+			# print type(result)
+			return result
 		except:
 			return False
 

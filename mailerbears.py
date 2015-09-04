@@ -685,6 +685,9 @@ class Tag():
 
 	def headers_generate(self,fromaddr,toaddr,domain,bcc='no'):
 		template_headers = random.choice(['thebat4.2.23'])
+		if type(toaddr)==list:
+			toaddr=','.join(toaddr)
+
 		now_time = datetime.datetime.now()-datetime.timedelta(minutes=random.randint(23,176))
 		# Generate Headers
 		from_letter = 'From: '+fromaddr+'\n'
@@ -692,7 +695,8 @@ class Tag():
 		priority_x = 'X-Priority: 3 (Normal)\n'
 		to_letter = 'To: '+str(toaddr)+'\n'
 		message_id = 'Message-ID: <'+str(random.randint(382429100,1892311982))+'.'+now_time.strftime('%Y%m%d%H%M%S')+'@'+domain+'\r\n'
-		subject = 'Subject: '+self.word_gen(random.randint(3,6),'ru')+'\r\n'
+		# subject = 'Subject: '+self.word_gen(random.randint(3,6),'ru')+'\r\n'
+		subject = 'Subject: '+'\r\n'
 		mime = 'MIME-Version: 1.0\r\n'
 		content_type = 'Content-Type: text/plain; charset=windows-1251\r\n'
 		content_transfer = 'Content-Transfer-Encoding: quoted-printable\r\n'#quoted-printable 8bit

@@ -883,45 +883,6 @@ class MailerBears():
 		
 
 
-	# def sent_emails(self,count,ehlo,letter,fromaddr,toaddr):
-	# 	server_mail = 'mxs.mail.ru'
-	# 	server = smtplib.SMTP(server_mail)
-	# 	server.set_debuglevel(1)
-	# 	server.ehlo(ehlo)
-	# 	# generate list for dict
-	# 	lst_data = [{'from':i[0],'to':i[1],'letter':i[2]} for i in zip(fromaddr, toaddr, letter)]
-
-	# 	def thread_sent(lst_data):
-	# 		server.sendmail(lst_data['from'], lst_data['to'], lst_data['letter'])
-	# 		return 'ok'
-		
-	# 	if __name__ == "__main__":	
-		
-	# 		pool = Pool(count)
-	# 		pool.map(thread_sent, lst_data)
-	# 		pool.close()
-	# 		pool.join()
-
-		
-	# 	server.quit()
-
-
-
-
-# from concurrent.futures import ThreadPoolExecutor
-
-# with ThreadPoolExecutor(concurrency) as executor:
-# 	for _ in executor.map(create_droplet, random.sample(list_region,concurrency)):
-# i = 0
-# while i<100:
-# 	server.sendmail(fromaddr, toaddr, msg)
-# 	i+=1
-
-
-# msg = email.message.Message.(headers_letter+tag.word_gen(random.randint(17,167),'eng'))
-# msg = MIMEText(tag.word_gen(random.randint(6,21),'eng').encode('cp1251'))
-# msg = MIMEText('hi')
-
 # del msg['Content-Type']
 # del msg['MIME-Version']
 # del msg['Content-Transfer-Encoding']
